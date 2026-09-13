@@ -166,15 +166,20 @@ function TranslationTool() {
   return (
     <div className="translation-app">
       <header className="translation-header">
+        <span className="translation-badge">Multilingual</span>
         <h1>Language Translation Tool</h1>
         <p>Enter text, choose languages, and translate instantly.</p>
       </header>
 
       <main className="translation-main">
-        <section className="translation-panel" aria-labelledby="input-heading">
-          <h2 id="input-heading" className="visually-hidden">
-            Source text
-          </h2>
+        <section
+          className="translation-panel translation-panel--input"
+          aria-labelledby="input-heading"
+        >
+          <div className="panel-heading">
+            <h2 id="input-heading">Source Text</h2>
+            <p>Choose languages and enter the text you want to translate.</p>
+          </div>
 
           <div className="language-row">
             <div className="field">
@@ -191,6 +196,10 @@ function TranslationTool() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="language-divider" aria-hidden="true">
+              →
             </div>
 
             <div className="field">
@@ -219,7 +228,7 @@ function TranslationTool() {
               onChange={handleSourceTextChange}
               placeholder="Enter text to translate..."
               rows={8}
-              aria-describedby="character-count translation-error"
+              aria-describedby={error ? 'character-count translation-error' : 'character-count'}
               disabled={isTranslating}
             />
             <div className="textarea-footer">
@@ -254,9 +263,9 @@ function TranslationTool() {
           </button>
         </section>
 
-        <section className="translation-panel" aria-labelledby="result-heading">
+        <section className="translation-panel translation-panel--output" aria-labelledby="result-heading">
           <div className="result-header">
-            <h2 id="result-heading">Translation</h2>
+            <h2 id="result-heading">Translated Result</h2>
             <button
               type="button"
               className={`copy-button ${copyFeedback === 'Copied!' ? 'copy-button--success' : ''}`}
