@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   DEFAULT_SOURCE_LANGUAGE,
   DEFAULT_TARGET_LANGUAGE,
@@ -9,6 +9,29 @@ import {
 import { TranslationServiceError, translateText } from '../services/translationApi'
 
 const PLACEHOLDER_RESULT = 'Your translation will appear here.'
+const COPY_FEEDBACK_MS = 2000
+
+async function copyToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text)
+    return
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.left = '-9999px'
+  document.body.appendChild(textarea)
+  textarea.select()
+
+  const copied = document.execCommand('copy')
+  document.body.removeChild(textarea)
+
+  if (!copied) {
+    throw new Error('Copy command failed')
+  }
+}
 
 function getUserFriendlyErrorMessage(error) {
   if (!(error instanceof TranslationServiceError)) {
@@ -40,7 +63,17 @@ function TranslationTool() {
   const [result, setResult] = useState('')
   const [error, setError] = useState('')
   const [isTranslating, setIsTranslating] = useState(false)
+  const [copyFeedback, setCopyFeedback] = useState('')
   const isTranslatingRef = useRef(false)
+  const copyTimeoutRef = useRef(null)
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const characterCount = sourceText.length
   const hasResult = result.length > 0
@@ -78,6 +111,7 @@ function TranslationTool() {
     }
 
     setError('')
+    setCopyFeedback('')
     setIsTranslating(true)
     isTranslatingRef.current = true
 
@@ -100,11 +134,31 @@ function TranslationTool() {
     setSourceText('')
     setResult('')
     setError('')
+    setCopyFeedback('')
+    if (copyTimeoutRef.current) {
+      clearTimeout(copyTimeoutRef.current)
+    }
   }
 
-  const handleCopy = () => {
-    // Placeholder for copy functionality.
-    if (!result) return
+  const handleCopy = async () => {
+    if (!result) {
+      return
+    }
+
+    if (copyTimeoutRef.current) {
+      clearTimeout(copyTimeoutRef.current)
+    }
+
+    try {
+      await copyToClipboard(result)
+      setCopyFeedback('Copied!')
+    } catch {
+      setCopyFeedback('Copy failed')
+    }
+
+    copyTimeoutRef.current = setTimeout(() => {
+      setCopyFeedback('')
+    }, COPY_FEEDBACK_MS)
   }
 
   const resultContent = hasResult ? result : PLACEHOLDER_RESULT
@@ -205,12 +259,12 @@ function TranslationTool() {
             <h2 id="result-heading">Translation</h2>
             <button
               type="button"
-              className="copy-button"
+              className={`copy-button ${copyFeedback === 'Copied!' ? 'copy-button--success' : ''}`}
               onClick={handleCopy}
               disabled={!hasResult || isTranslating}
-              aria-label="Copy translation"
+              aria-label={copyFeedback || 'Copy translation'}
             >
-              Copy
+              {copyFeedback || 'Copy'}
             </button>
           </div>
 

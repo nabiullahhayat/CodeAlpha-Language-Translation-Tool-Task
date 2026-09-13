@@ -209,6 +209,12 @@
   cursor: not-allowed;
 }
 
+.copy-button--success {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
 .result-area {
   min-height: 220px;
   padding: 0.875rem 1rem;
